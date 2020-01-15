@@ -1,8 +1,8 @@
 from pythonosc.dispatcher import Dispatcher
 from pythonosc.osc_server import BlockingOSCUDPServer
-from ThreadingServer_test import *
 import threading
 from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LogisticRegression
 import numpy as np
 from tkinter import *
 
@@ -17,15 +17,21 @@ from tkinter import *
 ip = "127.0.0.1"
 port = 8339
 port_client = 8609
-#create gate which controls slider output
+
+#gates
 gate_slider = True
+gate_switch = True
+
 #client
 client = SimpleUDPClient(ip, port_client)
+
 #two lists used for learning
 i_lst = []
 o_lst = []
-#linear regression
+
+#learning algorithms
 linear_regressor = LinearRegression() 
+logistic_regressor = LogisticRegression()
 
 
 
@@ -42,7 +48,7 @@ def GateHandler(address, *args):
 #sends message from slider to client, only when not learning
 def SliderHandler(address, *args):
 	if gate_slider :
-		client.send_message("jemoerke", args)
+		client.send_message("prediction/address", args)
 
 #inputs the input stream
 def InputHandler(address, *args) :
@@ -60,15 +66,29 @@ def OutputHandler(address, *args) :
 def TrainingHandler(address, *args) :
 	i_array = np.asarray(i_lst)
 	o_array = np.asarray(o_lst) 
-	linear_regressor.fit(o_array.reshape(-1, 1), i_array) 
+
+	if gate_switch :
+		linear_regressor.fit(o_array.reshape(-1, 1), i_array) 
+	else :
+		logistic_regressor.fit(o_array.reshape(-1, 1), i_array)
 
 #livetime predict outputs 
 def RunHandler(address, *args) :
 	run_array = np.asarray(args)
-	Y_pred = linear_regressor.predict(run_array.reshape(-1, 1))
+
+	if gate_switch :
+		Y_pred = linear_regressor.predict(run_array.reshape(-1, 1))
+	else :
+		Y_pred_array = logistic_regressor.predict(run_array.reshape(-1, 1))
+		Y_pred = Y_pred_array[()].astype(float)
 	global gate_slider
+
 	gate_slider = False
-	client.send_message("prediction/address", Y_pred)
+	client.send_message("prediction/address", Y_pred.item(0))
+
+def SwitchHandler(address, *args) :
+	global gate_switch
+	gate_switch = args[0]
 
 
 
@@ -85,6 +105,7 @@ dispatcher.map("/output/address", InputHandler)
 dispatcher.map("/input/address", OutputHandler)
 dispatcher.map("/train/address", TrainingHandler)
 dispatcher.map("/run/address", RunHandler)
+dispatcher.map("/switch/address", SwitchHandler)
 
 #creates a server
 server = BlockingOSCUDPServer((ip, port), dispatcher)
