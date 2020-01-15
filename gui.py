@@ -30,7 +30,7 @@ o_lst = []
 
 #server_info
 ip = "127.0.0.1"
-port = 8557
+port = 8556
 port_client = 8339
 
 #button event
@@ -139,6 +139,7 @@ def Switch() :
     client.send_message("/switch/address", switch_gate)
 
 
+
 #GUI and Slider Output
 #####################################################
 
@@ -180,7 +181,7 @@ def GUI():
         s_value = output.get()
         client.send_message("/slider/address", s_value) 
 
-        window.update()
+        window.update() 
         window.after(1)
 
 
