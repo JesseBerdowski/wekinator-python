@@ -15,10 +15,14 @@ from tkinter import *
 #slider value
 s_value = 0
 
+#learning algorithm name
+l_name = "Linear Regression" 
+
 #gates
 record_gate = True
 tuple_gate = False
 run_gate = False
+switch_gate = True
 
 #input- and output list
 i_lst = []
@@ -26,7 +30,7 @@ o_lst = []
 
 #server_info
 ip = "127.0.0.1"
-port = 8558
+port = 8557
 port_client = 8339
 
 #button event
@@ -70,8 +74,8 @@ def SliderHandler(address, *args):
 
 #Create Dispatcher and Handlers
 dispatcher = Dispatcher()
-dispatcher.map("/mapping_module", LearnHandler)
-dispatcher.map("/mapping_module", SliderHandler)
+dispatcher.map("/mapping/address", LearnHandler)
+dispatcher.map("/mapping/address", SliderHandler)
 
 
 
@@ -118,6 +122,21 @@ def Run() :
     global run_gate
     run_gate = True
 
+#Switch Learning Algorithm
+def Switch() :
+    global l_name
+    global switch_gate
+
+    #switch learning model on button push
+    if switch_gate:
+        l_name = "Logistic Regression"
+        switch_gate = False
+    else :
+        l_name = "Linear Regression"
+        switch_gate = True
+
+    #send the gate value
+    client.send_message("/switch/address", switch_gate)
 
 
 #GUI and Slider Output
@@ -128,6 +147,7 @@ def Run() :
 #GUI
 def GUI():
     global s_value
+    global l_name
 
     window = Tk()
     window.title("Wekinator Python")
@@ -137,11 +157,13 @@ def GUI():
     btn_2 = Button(window, text="Stop", command = StopLearn)
     btn_3 = Button(window, text="Train", command = Train)
     btn_4 = Button(window, text="Run", command = Run)
+    btn_5 = Button(window, text="Switch", command = Switch)
 
     btn.grid(column=1,  row = 0)
     btn_2.grid(column=2, row =0)
     btn_3.grid(column=3, row = 0)
     btn_4.grid(column=4, row = 0)
+    btn_5.grid(column=5, row = 0)
 
     output = Scale(window, from_=100, to=0)
     output.grid(column=1, row=1)    
@@ -149,6 +171,10 @@ def GUI():
     #Infinite Loop which creates Window 
     while True :
         window.update_idletasks()
+
+        #create Label and update name
+        name = Label(window, text= l_name)
+        name.grid(column=5, row = 1)
 
         #transfer slider value
         s_value = output.get()
