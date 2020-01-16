@@ -1,11 +1,12 @@
 from pythonosc.dispatcher import Dispatcher
 from pythonosc.osc_server import BlockingOSCUDPServer
+from pythonosc.udp_client import SimpleUDPClient
 import threading
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import LogisticRegression
 import numpy as np
 from tkinter import *
-
+from gui import *
 
 
 #Object Declaration
